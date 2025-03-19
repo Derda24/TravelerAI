@@ -1,4 +1,5 @@
-numpy==2.2.2
-pandas==2.2.3
-scikit-learn==1.6.1
-streamlit==1.43.2
+streamlit
+pandas
+scikit-learn
+numpy
+pywin32==310; sys_platform == "win32"

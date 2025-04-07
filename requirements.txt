@@ -1,5 +1,0 @@
-streamlit
-pandas
-scikit-learn
-numpy
-pywin32==310; sys_platform == "win32"

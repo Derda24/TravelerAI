@@ -1,37 +1,49 @@
-import time
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from supabase import create_client, Client
+from difflib import SequenceMatcher
 
-# Tarayıcı ayarları
-options = uc.ChromeOptions()
-options.add_argument("--start-maximized")
-options.add_argument("--disable-blink-features=AutomationControlled")
-options.add_argument("--disable-infobars")
-options.add_argument("--disable-extensions")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
+# Supabase setup
+SUPABASE_URL = "https://behwybmvebhrggxxkyqs.supabase.co"
+SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlaHd5Ym12ZWJocmdneHhreXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjAwODYsImV4cCI6MjA1OTU5NjA4Nn0.ChkEGsaJaXidGKSkiTQ6msN0xuUS81zhzoex32gwjQ4"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
-# User-Agent (güncel)
-options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+# Map store IDs to names
+STORE_NAMES = {
+    1: "Lidl",
+    2: "Carrefour",
+    3: "Dia",
+    4: "Mercadona",
+    5: "El Corte Inglés"
+}
 
-# Driver başlat
-driver = uc.Chrome(options=options, use_subprocess=True)
+# Normalize product names for matching
+def normalize(text: str) -> str:
+    return text.lower().replace(" ", "").replace("-", "").replace(",", "").replace(".", "")
 
-# Web sitesine git
-driver.get("https://www.lidl.es/es/carniceria/c10000757")
+# Compute similarity ratio
+def similar(a: str, b: str) -> float:
+    return SequenceMatcher(None, a, b).ratio()
 
-# Bot olmadığını gösteren işaretçi: biraz bekleme
-time.sleep(10)
+# Compare products across all stores (optionally filter by category)
+def compare_products(product_name: str, category: str = None) -> dict:
+    # Build query
+    query = supabase.table("products").select("*").eq("name", product_name)
+    if category:
+        query = query.eq("category", category)
+    response = query.execute()
 
-try:
-    WebDriverWait(driver, 15).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "product__title"))
-    )
-    print("✅ Sayfa yüklendi")
-except Exception as e:
-    print("❌ Yükleme hatası:", e)
+    products = getattr(response, "data", []) or []
+    if not products:
+        return {"message": f"No products found with the name: {product_name}"}
 
-time.sleep(5)
-driver.quit()
+    # Group by store
+    store_comparison = {}
+    for p in products:
+        sid = p.get("store_id")
+        store_name = STORE_NAMES.get(sid, f"Store {sid}")
+        entry = {"category": p.get("category"), "price": p.get("price")}
+        store_comparison.setdefault(store_name, []).append(entry)
+
+    # Now find best price per store
+    # Optionally, you can compute overall cheapest here
+
+    return store_comparison

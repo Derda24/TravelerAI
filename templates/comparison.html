@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Comparison for {{ product_name }}</title>
+</head>
+<body>
+    <h1>Price Comparison for {{ product_name }}</h1>
+    {% if comparison == "No products found" %}
+        <p>{{ comparison }}</p>
+    {% else %}
+        <table border="1">
+            <tr>
+                <th>Store</th>
+                <th>Category</th>
+                <th>Price (€)</th>
+            </tr>
+            {% for store, products in comparison.items() %}
+                <tr>
+                    <td colspan="3"><strong>{{ store }}</strong></td>
+                </tr>
+                {% for product in products %}
+                    <tr>
+                        <td></td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.price }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>

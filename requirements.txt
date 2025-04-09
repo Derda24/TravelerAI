@@ -222,3 +222,7 @@ wrapt==1.14.1
 wsproto==1.2.0
 yarl==1.18.3
 zipp==3.21.0
+Flask==2.0.1
+supabase-py==0.3.0
+selenium==3.141.0
+beautifulsoup4==4.10.0

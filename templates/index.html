@@ -1,16 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Comparison</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Price Comparison</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    h1 { color: #333; }
+    form { margin-bottom: 1.5rem; }
+    input[type="text"] { padding: 0.5rem; width: 300px; }
+    button { padding: 0.5rem 1rem; }
+    .store-block { margin-bottom: 1rem; }
+    .product-list { list-style: none; padding: 0; }
+    .product-list li { padding: 0.3rem 0; }
+  </style>
 </head>
 <body>
-    <h1>Compare Product Prices Across Stores</h1>
-    <form action="/compare" method="POST">
-        <label for="product_name">Enter product name:</label>
-        <input type="text" id="product_name" name="product_name" required>
-        <button type="submit">Compare</button>
-    </form>
+  <h1>Market Price Comparison</h1>
+
+  <form action="/" method="post">
+    <input type="text" name="product" placeholder="Enter product name..." required />
+    <button type="submit">Compare</button>
+  </form>
+
+  {% if query %}
+    <h2>Results for “{{ query }}”</h2>
+  {% else %}
+    <h2>All Products</h2>
+  {% endif %}
+
+  {% if comparison and comparison.message %}  
+    <p>{{ comparison.message }}</p>
+  {% elif comparison %}  
+    {% for name, items in comparison.items() %}  
+      <div class="store-block">  
+        <h3>{{ name }}</h3>  
+        <ul class="product-list">  
+          {% for it in items %}  
+            <li>{{ it.category }} — €{{ '%.2f'|format(it.price) }} (Store ID: {{ it.store }})</li>  
+          {% endfor %}  
+        </ul>  
+      </div>  
+    {% endfor %}  
+  {% endif %}
 </body>
 </html>

@@ -1,27 +1,42 @@
 from flask import Flask, render_template, request
-from supabase import create_client, Client
-from scraper import compare_products  # your compare function
-
-# Supabase setup
-SUPABASE_URL = "https://behwybmvebhrggxxkyqs.supabase.co"
-SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlaHd5Ym12ZWJocmdneHhreXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjAwODYsImV4cCI6MjA1OTU5NjA4Nn0.ChkEGsaJaXidGKSkiTQ6msN0xuUS81zhzoex32gwjQ4"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
+from supabase_client import supabase
 
 app = Flask(__name__)
 
-@app.route('/compare', methods=['GET','POST'])
-def compare():
-    if request.method == 'POST':
-        product_name = request.form.get('product_name', '').strip()
-        category     = request.form.get('category')
-        comparison = compare_products(product_name, category)
-        return render_template("comparison.html",
-                               product_name=product_name,
-                               category=category,
-                               comparison=comparison)
-    else:
-        # If someone does GET /compare, just redirect back to home
-        return redirect(url_for('home'))
+@app.route("/", methods=["GET", "POST"])
+def index():
+    query = None
+    comparison = None
 
-if __name__ == '__main__':
+    if request.method == "POST":
+        query = request.form.get("product", "").strip()
+        if query:
+            res = supabase.table("products")\
+                .select("name, price, store_id, category")\
+                .ilike("name", f"%{query}%")\
+                .execute()
+            items = res.data
+            if not items:
+                comparison = {"message": f"No matching products found for {query}."}
+            else:
+                comp = {}
+                for item in items:
+                    key = item["name"]
+                    if key not in comp or item["price"] < comp[key]["price"]:
+                        comp[key] = {"price": item["price"], "store": item["store_id"], "category": item["category"]}
+                comparison = { k: [v] for k, v in comp.items() }
+    else:
+        # GET isteğinde tüm ürünleri listele
+        res = supabase.table("products").select("name, price, store_id, category").execute()
+        items = res.data or []
+        comp = {}
+        for item in items:
+            key = item["name"]
+            if key not in comp or item["price"] < comp[key]["price"]:
+                comp[key] = {"price": item["price"], "store": item["store_id"], "category": item["category"]}
+        comparison = { k: [v] for k, v in comp.items() }
+
+    return render_template("index.html", query=query, comparison=comparison)
+
+if __name__ == "__main__":
     app.run(debug=True)

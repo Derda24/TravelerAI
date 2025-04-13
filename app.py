@@ -24,7 +24,7 @@ def index():
                     key = item["name"]
                     if key not in comp or item["price"] < comp[key]["price"]:
                         comp[key] = {"price": item["price"], "store": item["store_id"], "category": item["category"]}
-                comparison = { k: [v] for k, v in comp.items() }
+                comparison = {k: [v] for k, v in comp.items()}
     else:
         # GET isteğinde tüm ürünleri listele
         res = supabase.table("products").select("name, price, store_id, category").execute()
@@ -34,7 +34,7 @@ def index():
             key = item["name"]
             if key not in comp or item["price"] < comp[key]["price"]:
                 comp[key] = {"price": item["price"], "store": item["store_id"], "category": item["category"]}
-        comparison = { k: [v] for k, v in comp.items() }
+        comparison = {k: [v] for k, v in comp.items()}
 
     return render_template("index.html", query=query, comparison=comparison)
 
